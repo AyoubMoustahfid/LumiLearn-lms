@@ -17,13 +17,11 @@ bun dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 
-## Envirement
-
-First, run the development server:
+## Envirement (.env)
 
 ```bash
-BETTER_AUTH_SECRET=h3zzRWI6lwyFoYbD0JWQFibdxs8RPWi8
-BETTER_AUTH_URL=http://localhost:3000 
+BETTER_AUTH_SECRET=**********************************
+BETTER_AUTH_URL=**********************************
 
 
 
