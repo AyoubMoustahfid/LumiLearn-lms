@@ -13,12 +13,23 @@ import UserDropdown from './UserDropdown'
 const navigationItems = [
     { name: "Home", href: "/" },
     { name: "Courses", href: "/courses" },
-    { name: "Dashboard", href: "/admin" },
-]
+    { name: "Admin", href: "/admin", role: "admin" },
+    { name: "Dashboard", href: "/dashboard", role: "user" },
+];
 
 const Navbar = () => {
 
-    const {data: session, isPending} = authClient.useSession()
+    const { data: session, isPending } = authClient.useSession();
+
+    // Filter navigation items based on user role
+    const filteredNavigationItems = navigationItems.filter((item) => {
+        // Always show items without a role requirement
+        if (!item.role) return true;
+        
+        // Show role-specific items only if user has that role
+        return session?.user?.role === item.role;
+    });
+
 
     return (
         <header
@@ -34,7 +45,7 @@ const Navbar = () => {
 
                 <nav className='hidden md:flex md:flex-1 md:items-center md:justify-between'>
                     <div className='flex items-center space-x-2'>
-                        {navigationItems.map((item) => (
+                        {filteredNavigationItems.map((item) => (
                             <Link
                                 key={item.name}
                                 href={item.href}

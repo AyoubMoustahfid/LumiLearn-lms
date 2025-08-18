@@ -19,6 +19,7 @@ type Params = Promise<{ slug: string }>;
 export default async function SlugPage({ params }: { params: Params }) {
 
     const { slug } = await params
+    console.log('log', slug)
     const course = await getIndividualCourse(slug)
 
     const isEnrolled = await checkIfCourseBought(course.id)

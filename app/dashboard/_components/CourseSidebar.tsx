@@ -77,13 +77,13 @@ export function CourseSidebar({course} : iAppProps) {
                                         {chapter.position} : {chapter.title}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground font-medium truncate">
-                                        {chapter.lessens.length} lessons
+                                        {chapter.lessons.length} lessons
                                     </p>
                                 </div>
                             </Button>
                         </CollapsibleTrigger>
                         <CollapsibleContent className="mt-3 pl-6 border-l-2 space-y-3">
-                            {chapter.lessens.map(lesson => (
+                            {chapter.lessons.map(lesson => (
                                 <LessonItem
                                     lesson={lesson}
                                     key={lesson.id}

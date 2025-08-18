@@ -143,7 +143,7 @@ export async function enrollInCourseAction(courseId: string): Promise<ApiRespons
                         //     product_data: { name: course.title },
                         //     unit_amount: course.price * 100, // cents
                         // },
-                        price: "price_1RwL9FQfU9aaRaRJzzlFVabt",
+                        price: "price_1RxEJsQfU9aaRaRJWHcHSnJV",
                         quantity: 1
                     }
                 ],

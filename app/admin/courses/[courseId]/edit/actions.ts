@@ -261,7 +261,7 @@ export async function deleteLesson(
                 id: chapterId
             },
             select: {
-                lessens: {
+                lessons: {
                     orderBy: {
                         position: "asc"
                     },
@@ -280,7 +280,7 @@ export async function deleteLesson(
             }
         }
 
-        const lessons = chapterWithLessons.lessens
+        const lessons = chapterWithLessons.lessons
 
         const lessonToDelete = lessons.find(lesson => lesson.id === lessonId)
 

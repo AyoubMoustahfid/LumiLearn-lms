@@ -12,7 +12,7 @@ export async function markLessonComplete(lessonId: string, slug: string): Promis
 
     try{
 
-        await prisma.lesseonProgress.upsert({
+        await prisma.lessonProgress.upsert({
             where: {
                 userId_lessonId: {
                     userId: session.id,
