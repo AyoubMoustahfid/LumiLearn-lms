@@ -10,6 +10,7 @@ import {
     IconFolder,
     IconHelp,
     IconListDetails,
+    IconMessageReport,
     IconSearch,
     IconSettings,
     IconUsers,
@@ -42,6 +43,11 @@ const data = {
             title: "Courses",
             url: "/admin/courses",
             icon: IconListDetails,
+        },
+        {
+            title: "Reviews",
+            url: "/admin/reviews",
+            icon: IconMessageReport,
         },
         {
             title: "Analytics",
@@ -143,7 +149,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     className="size-5"
                                 />
                                 <span className="text-base font-semibold">
-                                    MarshalLMS
+                                    LumiLearn.
                                 </span>
                             </Link>
                         </SidebarMenuButton>

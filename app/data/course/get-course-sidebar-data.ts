@@ -1,11 +1,10 @@
+// get-course-sidebar-data.ts
 import "server-only"
 import { requireUser } from "../user/require-user"
 import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
 
-
-export async function getCourseSidebarData(slug: string){
-
+export async function getCourseSidebarData(slug: string) {
     const session = await requireUser()
 
     const course = await prisma.course.findUnique({
@@ -50,11 +49,21 @@ export async function getCourseSidebarData(slug: string){
                         }
                     }
                 }
+            },
+            reviews: {
+                where: {
+                    userId: session.id
+                },
+                select: {
+                    comment: true,
+                    rating: true,
+                    id: true,
+                }
             }
         }
     })
 
-    if(!course){
+    if (!course) {
         return notFound()
     }
 
@@ -67,12 +76,29 @@ export async function getCourseSidebarData(slug: string){
         }
     })
 
-    if(!enrollment || enrollment.status !== "Active"){
+    if (!enrollment || enrollment.status !== "Active") {
         return notFound()
     }
 
+    // Calculate completion status
+    const totalLessons = course.chapter.reduce((total, chapter) => 
+        total + chapter.lessons.length, 0
+    )
+    
+    const completedLessons = course.chapter.reduce((total, chapter) => {
+        return total + chapter.lessons.filter(lesson => 
+            lesson.lessonProgress.some(progress => progress.completed)
+        ).length
+    }, 0)
+
+    const isCourseCompleted = totalLessons > 0 && completedLessons === totalLessons
+
     return {
-        course
+        course,
+        isCourseCompleted,
+        hasUserReviewed: course.reviews.length > 0,
+        totalLessons,
+        completedLessons
     }
 }
 

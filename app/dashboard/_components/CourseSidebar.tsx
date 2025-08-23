@@ -1,26 +1,29 @@
 "use client"
 
 import { CourseSidebarDataType } from "@/app/data/course/get-course-sidebar-data";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
-import { ChevronDown, Play } from "lucide-react";
+import { ChevronDown, Play, Star } from "lucide-react";
 import { LessonItem } from "./LessonItem";
 import { usePathname } from "next/navigation";
 import { useCourseProgress } from "@/hooks/use-course-progress";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 
 interface iAppProps {
-    course : CourseSidebarDataType["course"]
+    course: CourseSidebarDataType["course"]
 }
 
-export function CourseSidebar({course} : iAppProps) {
+export function CourseSidebar({ course }: iAppProps) {
 
     const pathname = usePathname()
 
     const currentLesosnId = pathname.split("/").pop()
 
-    const {completedLessons, progressPercentage, totalLessons} = useCourseProgress({courseData: course})
+    const { completedLessons, progressPercentage, totalLessons } = useCourseProgress({ courseData: course })
+
 
     return (
         <div className="flex flex-col h-full">
@@ -68,7 +71,7 @@ export function CourseSidebar({course} : iAppProps) {
                             <Button
                                 variant="outline"
                                 className="w-full p-3 h-auto flex items-center gap-2"
-                            >  
+                            >
                                 <div className="shrink-0">
                                     <ChevronDown className="size-4 text-primary" />
                                 </div>
@@ -95,6 +98,41 @@ export function CourseSidebar({course} : iAppProps) {
                         </CollapsibleContent>
                     </Collapsible>
                 ))}
+
+                <Collapsible
+                    defaultOpen
+                >
+                    <CollapsibleTrigger asChild>
+                        <Button
+                            variant="outline"
+                            disabled={totalLessons !== completedLessons}
+                            className="w-full p-3 h-auto flex items-center gap-2"
+                        >
+                            <div className="shrink-0">
+                                <ChevronDown className="size-4 text-primary" />
+                            </div>
+                            <div className="flex-1 text-left min-w-0">
+                                <p className="font-semibold text-sm truncate text-foreground">
+                                    Add review
+                                </p>
+                            </div>
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3 pl-6 border-l-2 space-y-3">
+                        <Link
+                            href={`/dashboard/${course.slug}/${currentLesosnId}?review-course=${course.id}`}
+                            className={buttonVariants({
+                                variant: "outline",
+                                className: cn(
+                                    "w-full p-2.5 h-auto justify-start transition-all bg-primary/10 dark:bg-primary/20 border-primary/50 hover:bg-primary/20 dark:hover:bg-primary/30 text-primary",
+                                )
+                            })}
+                        >
+                            <Star className="size-4 mr-2" />
+                            Write a Review
+                        </Link>
+                    </CollapsibleContent>
+                </Collapsible>
             </div>
         </div>
     )

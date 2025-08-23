@@ -119,7 +119,7 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                                     className="size-5"
                                 />
                                 <span className="text-base font-semibold">
-                                    MarshalLMS
+                                    LumiLearn.
                                 </span>
                             </Link>
                         </SidebarMenuButton>
