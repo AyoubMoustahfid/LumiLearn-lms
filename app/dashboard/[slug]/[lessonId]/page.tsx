@@ -35,5 +35,5 @@ export default async function LessonContentPage({ params, searchParams }: PagePr
 
   // Otherwise, show normal lesson content
   const data = await getLessonContent(lessonId)
-  return <CourseContent data={data} />
+  return <CourseContent data={data} slug={slug} />
 }

@@ -10,13 +10,15 @@ import { useTransition } from "react";
 import { markLessonComplete } from "../actions";
 import { toast } from "sonner";
 import { useConfetti } from "@/hooks/use-confetti";
+import AnswerQuizCard from "./AnswerQuizCard";
 
 
 interface iAppProps {
-    data: LessonCotentType
+    data: LessonCotentType,
+    slug?: string
 }
 
-export function CourseContent({ data }: iAppProps) {
+export function CourseContent({ data, slug }: iAppProps) {
 
     const [isPending, startTransition] = useTransition()
     const { triggerConfetti } = useConfetti()
@@ -108,6 +110,21 @@ export function CourseContent({ data }: iAppProps) {
                     />
                 )}
             </div>
+
+            {data.quizzes && data.quizzes.length > 0 ? (
+                <div className="space-y-3 pt-3">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                        Quiz ?
+                    </h1>
+                    <AnswerQuizCard
+                        data={data.quizzes[0]}
+                        quizId={data.quizzes[0].id}
+                        slug={slug as string}
+                    />
+                </div>
+            ) : (
+                <p className="text-muted-foreground pt-3">No quiz available for this lesson.</p>
+            )}
         </div>
     )
 }

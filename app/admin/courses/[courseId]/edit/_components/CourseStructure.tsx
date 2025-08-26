@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { DndContext, DragEndEvent, DraggableSyntheticListeners, KeyboardSensor, PointerSensor, rectIntersection, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronRight, FileText, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, GripVertical, MessageCircleQuestionMark } from "lucide-react";
 import Link from "next/link";
 import { ReactNode, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +17,8 @@ import { NewChapterModal } from "./NewChapterModal";
 import { NewLessonModal } from "./NewLessonModal";
 import { DeleteLesson } from "./DeleteLesson";
 import { DeleteChapter } from "./DeleteChapter";
+import { NewQuizModal } from "./NewQuizModal";
+import { QuizDisplay } from "./QuizDisplay";
 
 
 interface iAppProps {
@@ -43,7 +45,16 @@ export function CourseStructur({ data }: iAppProps) {
         lessons: chapter.lessons.map((lesson) => ({
             id: lesson.id,
             title: lesson.title,
-            order: lesson.position
+            order: lesson.position,
+            quizzes: lesson.quizzes.map(q => ({
+                question: q.question,
+                randomizeOrder: q.randomizeOrder,
+                estimationTime: q.estimationTime,
+                points: q.points,
+                lessonId: q.lessonId,
+                answers: q.answers || [] // <-- make sure answers exist
+            })),
+            opened: false
         }))
     })) || []
 
@@ -57,11 +68,19 @@ export function CourseStructur({ data }: iAppProps) {
                 title: chapter.title,
                 order: chapter.position,
                 isOpen: prevItems.find((item) => item.id === chapter.id)?.isOpen ?? true,
-                lessons: chapter.lessons.map((lesson) => ({
-                    id: lesson.id,
-                    title: lesson.title,
-                    order: lesson.position
-                }))
+                lessons: chapter.lessons.map((lesson) => {
+                    const prevLesson = prevItems
+                        .find((item) => item.id === chapter.id)
+                        ?.lessons.find((les) => les.id === lesson.id);
+
+                    return {
+                        id: lesson.id,
+                        title: lesson.title,
+                        order: lesson.position,
+                        quizzes: lesson.quizzes,
+                        opened: prevLesson?.opened ?? true,
+                    };
+                }),
             })) || []
 
             return updatedItems
@@ -247,6 +266,25 @@ export function CourseStructur({ data }: iAppProps) {
         )
     }
 
+    const toggleLesson = (chapterId: string, lessonId: string) => {
+        setItems((prevItems) =>
+            prevItems.map((chapter) =>
+                chapter.id === chapterId
+                    ? {
+                        ...chapter,
+                        lessons: chapter.lessons.map((lesson) =>
+                            lesson.id === lessonId
+                                ? { ...lesson, opened: !lesson.opened }
+                                : lesson
+                        ),
+                    }
+                    : chapter
+            )
+        )
+    }
+
+
+
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -322,26 +360,57 @@ export function CourseStructur({ data }: iAppProps) {
                                                                 data={{ type: "lesson", chapterId: item.id }}
                                                             >
                                                                 {(lessonListeners) => (
-                                                                    <div className="flex items-center justify-between p-2 hover:bg-accent rounded-sm">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <Button variant="ghost" size='icon' {...lessonListeners}>
-                                                                                <GripVertical
-                                                                                    className="size-4"
+                                                                    <Collapsible
+                                                                        open={lesson.opened}
+                                                                        onOpenChange={() => toggleLesson(item.id, lesson.id)}
+                                                                    >
+                                                                        <div className={`flex items-center justify-between p-2 hover:bg-accent rounded-sm ${lesson.opened && "border-b border-border"}`}>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Button variant="ghost" size='icon' {...lessonListeners}>
+                                                                                    <GripVertical
+                                                                                        className="size-4"
+                                                                                    />
+                                                                                </Button>
+                                                                                <FileText className="size-4" />
+                                                                                <Link
+                                                                                    href={`/admin/courses/${data.id}/${item.id}/${lesson.id}`}
+                                                                                >
+                                                                                    {lesson.title}
+                                                                                </Link>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <DeleteLesson
+                                                                                    courseId={data.id}
+                                                                                    chapterId={item.id}
+                                                                                    lessonId={lesson.id}
                                                                                 />
-                                                                            </Button>
-                                                                            <FileText className="size-4" />
-                                                                            <Link
-                                                                                href={`/admin/courses/${data.id}/${item.id}/${lesson.id}`}
-                                                                            >
-                                                                                {lesson.title}
-                                                                            </Link>
+                                                                                {(!lesson.quizzes || lesson.quizzes.length === 0) ? (
+                                                                                    <NewQuizModal lessonId={lesson.id} />
+                                                                                ) : (
+                                                                                    <CollapsibleTrigger>
+                                                                                        <div className="flex items-center gap-1">
+                                                                                            <MessageCircleQuestionMark className="size-5 text-blue-600 dark:text-blue-300" />
+                                                                                            <span className="flex items-center cursor-pointer p-2 rounded hover:bg-muted">
+                                                                                                {lesson.opened ? (
+                                                                                                    <ChevronDown className="size-4" />
+                                                                                                ) : (
+                                                                                                    <ChevronRight className="size-4" />
+                                                                                                )}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    </CollapsibleTrigger>
+                                                                                )}
+
+                                                                            </div>
                                                                         </div>
-                                                                        <DeleteLesson
-                                                                            courseId={data.id}
-                                                                            chapterId={item.id}
-                                                                            lessonId={lesson.id}
-                                                                        />
-                                                                    </div>
+                                                                        {(lesson.quizzes && lesson.opened) && (
+                                                                            <CollapsibleContent>
+                                                                                <div className="p-1">
+                                                                                    <QuizDisplay data={lesson.quizzes} lessonId={lesson.id} courseId={data.id} />
+                                                                                </div>
+                                                                            </CollapsibleContent>
+                                                                        )}
+                                                                    </Collapsible>
                                                                 )}
                                                             </SortableItem>
                                                         ))}

@@ -57,6 +57,26 @@ export const lessonSchema = z.object({
     videoKey: z.string().optional()
 })
 
+export const quizAnswerSchema = z.object({
+  answer: z.string().min(1, { message: "Answer text is required" }),
+  correct: z.boolean(),
+})
+
+export const quizSchema = z
+  .object({
+    question: z.string().min(3, { message: "Question must be at least 3 characters long" }),
+    randomizeOrder: z.boolean(),
+    estimationTime: z.number().int().min(1).max(30),
+    points: z.number().int().min(1).max(100),
+    lessonId: z.string().uuid({ message: "Invalid lesson Id" }),
+    answers: z.array(quizAnswerSchema).min(2, { message: "Provide at least 2 answers" }),
+  })
+.refine((data) => data.answers.filter(a => a.correct).length === 1, {
+  path: ["answers"],
+  message: "Exactly one answer must be correct",
+})
+
+export type QuizSchemaType = z.infer<typeof quizSchema>
 export type CourseSchemaType = z.infer<typeof courseSchema>
 export type ChapterSchemaType = z.infer<typeof chapterSchema>
 export type LessonSchemaType = z.infer<typeof lessonSchema>

@@ -1,43 +1,18 @@
-// app/admin/reviews/_components/TableReviews.tsx
 "use client"
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ReviewCardStudent } from "./ReviewCardStudent";
-import { Edit, Loader2, Star, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
 import { format } from "date-fns";
 import { AdminReview } from "@/app/data/review/get-all-reviews";
-import { useTransition } from "react";
-import { tryCatch } from "@/hooks/try-catch";
-import { deleteReview } from "../actions";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { DeleteReview } from "@/app/dashboard/[slug]/[lessonId]/_components/DeleteReview";
 
 interface TableReviewsProps {
     reviews: AdminReview[]
 }
 
 export function TableReviews({ reviews }: TableReviewsProps) {
-    const [isPending, startTransition] = useTransition()
-    const router = useRouter()
 
-    function handleDelete(reviewId: string) {
-        startTransition(async () => {
-            const { data: result, error } = await tryCatch(deleteReview(reviewId))
-
-            if (error) {
-                toast.error('An unexpected error occurred. Please try again.')
-                return
-            }
-
-            if (result.status === "success") {
-                toast.success(result.message)
-                router.push('/admin/reviews')
-            } else if (result.status === "error") {
-                toast.error(result.message)
-            }
-        })
-    }
 
     if (reviews.length === 0) {
         return (
@@ -97,19 +72,9 @@ export function TableReviews({ reviews }: TableReviewsProps) {
                         </TableCell>
                         <TableCell>
                             <div className="flex justify-center">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDelete(review.id)}
-                                    disabled={isPending}
-                                    className="text-gray-500 hover:text-red-600 cursor-pointer"
-                                >
-                                    {isPending ? (
-                                        <Loader2 className="size-5 animate-spin" />
-                                    ) : (
-                                        <Trash2 className="size-5" />
-                                    )}
-                                </Button>
+                                <DeleteReview
+                                    reviewId={review.id}
+                                />
                             </div>
                         </TableCell>
                     </TableRow>

@@ -26,12 +26,14 @@ model User {
   banned           Boolean?
   banReason        String?
   banExpires       DateTime?
+  points           Int              @default(0)
   courses          Course[]
   enrollment       Enrollment[]
   lessonProgress   LessonProgress[]
   reviews          Review[]
   accounts         Account[]
   sessions         Session[]
+  userQuizAnswer   UserQuizAnswer[]
 
   @@map("user")
 }
@@ -140,6 +142,41 @@ model Lesson {
   chapterId      String
   Chapter        Chapter          @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   lessonProgress LessonProgress[]
+
+  quizzes        Quiz[]
+}
+
+model Quiz {
+  id             String        @id @default(uuid())
+  question       String
+  randomizeOrder Boolean       @default(false)
+  estimationTime Int
+  points         Int
+  lessonId       String
+  Lesson         Lesson        @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  answers        QuizAnswer[]
+  userAnswers    UserQuizAnswer[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model QuizAnswer {
+  id      String @id @default(uuid())
+  answer  String
+  correct Boolean @default(false)
+  quizId  String
+  Quiz    Quiz    @relation(fields: [quizId], references: [id], onDelete: Cascade)
+}
+
+model UserQuizAnswer {
+  id        String   @id @default(cuid())
+  userId    String
+  quizId    String
+  answer    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  quiz Quiz @relation(fields: [quizId], references: [id])
 }
 
 model Enrollment {

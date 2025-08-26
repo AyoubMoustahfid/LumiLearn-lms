@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
 
 
-export async function adminGetCourse(id: string){
+export async function adminGetCourse(id: string) {
     await requireAdmin()
 
     const data = await prisma.course.findUnique({
@@ -35,7 +35,10 @@ export async function adminGetCourse(id: string){
                             description: true,
                             thumbnailKey: true,
                             position: true,
-                            videoKey: true
+                            videoKey: true,
+                            quizzes: {
+                                include: { answers: true } // <-- include answers
+                            }
                         }
                     }
                 }
@@ -43,10 +46,11 @@ export async function adminGetCourse(id: string){
         }
     })
 
-    if(!data){
+    if (!data) {
         return notFound()
     }
     return data
 }
 
 export type AdminCourseSingularType = Awaited<ReturnType<typeof adminGetCourse>>
+

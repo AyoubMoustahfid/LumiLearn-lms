@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
 
 
-export async function getLessonContent(lessonId: string) {
+export async function getLessonContent(lessonId: string, quizId?: string) {
     const session = await requireUser()
 
     const lesson = await prisma.lesson.findUnique({
@@ -36,7 +36,33 @@ export async function getLessonContent(lessonId: string) {
                         }
                     }
                 }
-            }
+            },
+            quizzes: {
+                where: quizId ? { id: quizId } : undefined,
+                select: {
+                    id: true,
+                    question: true, // assuming you have this field
+                    estimationTime: true,
+                    points: true,
+                    answers: {
+                        select: {
+                            id: true,
+                            answer: true,       // answer text
+                            correct: true,  // or another field name if you don’t expose correctness to user
+                        },
+                    },
+                     userAnswers: {
+                        where: {
+                            userId: session.id // Only get current user's answer
+                        },
+                        select: {
+                            id: true,
+                            userId: true,
+                            answer: true, // This is the answer ID the user selected
+                        }
+                    }
+                },
+            },
         }
     })
 

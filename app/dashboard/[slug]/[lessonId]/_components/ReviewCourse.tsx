@@ -144,7 +144,6 @@ export function ReviewComponent({
               <Button
                 variant="outline"
                 onClick={() => {
-                  // Stay on the review page for editing
                   const params = new URLSearchParams()
                   params.set('review-course', courseId)
                   router.replace(`/dashboard/${slug}?${params.toString()}`)

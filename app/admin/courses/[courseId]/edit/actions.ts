@@ -4,7 +4,7 @@ import { requireAdmin } from "@/app/data/admin/require-admin"
 import arcjet, { fixedWindow } from "@/lib/arcjet"
 import { prisma } from "@/lib/db"
 import { ApiResponse } from "@/lib/type"
-import { chapterSchema, ChapterSchemaType, courseSchema, CourseSchemaType, lessonSchema } from "@/lib/zodSchemas"
+import { chapterSchema, ChapterSchemaType, courseSchema, CourseSchemaType, lessonSchema, quizSchema, QuizSchemaType } from "@/lib/zodSchemas"
 import { request } from "@arcjet/next"
 import { revalidatePath } from "next/cache"
 
@@ -151,7 +151,7 @@ export async function reorderChapter(courseId: string, chapters: { id: string, p
 
 
 export async function createChapter(values: ChapterSchemaType): Promise<ApiResponse> {
-
+    await requireAdmin()
     try {
         const result = chapterSchema.safeParse(values)
 
@@ -199,7 +199,7 @@ export async function createChapter(values: ChapterSchemaType): Promise<ApiRespo
 }
 
 export async function createLesson(values: ChapterSchemaType): Promise<ApiResponse> {
-
+    await requireAdmin()
     try {
         const result = lessonSchema.safeParse(values)
 
@@ -396,4 +396,131 @@ export async function deleteChapter(
             message: "Failed to delete chapter"
         }
     }
+}
+
+
+
+export async function createQuizWithAnswers(input: QuizSchemaType) {
+
+    await requireAdmin()
+    try {
+        const parsed = quizSchema.safeParse(input)
+        if (!parsed.success) {
+            return { status: "error", issues: parsed.error.flatten() }
+        }
+        const { answers, ...quizData } = parsed.data
+
+        // Optional: verify lesson exists (defensive)
+        const lessonExists = await prisma.lesson.findUnique({ where: { id: quizData.lessonId }, select: { id: true, chapterId: true } })
+        if (!lessonExists) {
+            return { status: "error", message: "Lesson not found" }
+        }
+
+        await prisma.$transaction(async (tx) => {
+
+            await tx.quiz.create({
+                data: {
+                    ...quizData,
+                    answers: {
+                        create: answers.map((a) => ({
+                            answer: a.answer,
+                            correct: a.correct,
+                        })),
+                    },
+                },
+            })
+        })
+
+
+        const chapter = await prisma.chapter.findUnique({
+            where: {
+                id: lessonExists?.chapterId
+            },
+            select: {
+                courseId: true
+            }
+        })
+
+
+
+        revalidatePath(`/admin/courses/${chapter?.courseId}/edit`)
+
+        return { status: "success", message: "Quiz created successfully" }
+    } catch (err) {
+        console.log('err', err)
+        return {
+            status: "success",
+            message: "Failed to create quiz"
+        }
+    }
+}
+
+
+export async function editQuiz(data: QuizSchemaType, quizId: string, courseId: string) {
+  const user = await requireAdmin();
+
+  try {
+    const req = await request()
+        const decision = await aj.protect(req, {
+            fingerprint: user.user.id
+        })
+
+        if (decision.isDenied()) {
+            if (decision.reason.isRateLimit()) {
+                return {
+                    status: "error",
+                    message: "Looks like you are a malicus user"
+                }
+            } else {
+                return {
+                    status: "error",
+                    message: "You are a bot! if this is a mistake contact our support"
+                }
+            }
+        }
+
+    // Validate input
+    const result = quizSchema.safeParse(data);
+    if (!result.success) {
+      return {
+        status: "error",
+        message: "Invalid data",
+        errors: result.error.format()
+      };
+    }
+
+    const { question, randomizeOrder, estimationTime, points, answers } = result.data;
+
+    // Update quiz
+    await prisma.quiz.update({
+      where: { id: quizId },
+      data: {
+        question,
+        randomizeOrder,
+        estimationTime,
+        points,
+        // Update answers: overwrite old answers
+        answers: {
+          deleteMany: {}, // remove existing answers
+          create: answers.map(a => ({
+            answer: a.answer,
+            correct: a.correct
+          }))
+        }
+      }
+    });
+
+    revalidatePath(`/admin/courses/${courseId}/edit`)
+
+    return {
+      status: "success",
+      message: "Quiz updated successfully"
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      status: "error",
+      message: "Failed to update quiz"
+    };
+  }
 }
